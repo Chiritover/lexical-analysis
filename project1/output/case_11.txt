@@ -1,0 +1,64 @@
+ROW   COW   TYPE                TOKEN / ERROR MESSAGE
+1     1     comments            (* valid integer *)
+2     1     integer             11111111
+4     1     comments            (* an out of range integer *)
+5     1     error               RangeError: out of range: 11111111111111111111
+7     1     comments            (* an very large real -- still acceptable though *)
+8     1     real                123456789012345678901234567890.0
+10    1     comments            (* a valid string*)
+11    1     string              "abcdefg"
+13    1     comments            (* an invalid string with tab in it *)
+14    1     error               ValueError: invalid character found in string: "abcde	g"
+16    1     comments            (* an invalid string with many tabs in it *)
+17    1     error               ValueError: invalid character found in string: "abcde			g"
+19    1     comments            (* an ok string *)
+20    1     string              "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345"
+22    1     comments            (* an overly long string *)
+23    1     error               ValueError: string literal is too long: "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456"
+25    1     comments            (* another ok string *)
+26    1     string              ""
+28    1     comments            (* another ok string *)
+29    1     string              "(*"
+31    1     comments            (* an ok identifier *)
+32    1     identifier          x12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234
+34    1     comments            (* an overly long identifier *)
+35    1     error               CompileError: identifier is too long: x123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345
+37    1     comments            (* an ok line *)
+38    1     identifier          if
+38    4     identifier          x
+38    5     operator            <
+38    6     integer             7
+38    7     identifier          then
+38    12    identifier          y
+38    13    operator            :=
+38    15    identifier          y
+38    16    operator            +
+38    17    integer             17
+40    1     comments            (* should lex as two tokens *)
+41    1     real                123.
+41    5     identifier          x
+43    1     comments            (* a bad character (bell) *)
+44    1     error               Unknown character: 
+46    1     identifier          xx
+46    3     comments            (* an ok comment with an embedded	tab 
+and cr *)
+47    10    identifier          yy
+49    1     comments            (* an unterminated string *)
+50    1     error               SyntaxError: unterminated string literal: "abc
+52    1     comments            (* an unterminated string *)
+53    1     error               SyntaxError: unterminated string literal: "abc(**)
+55    1     comments            (* an unterminated string *)
+56    1     error               SyntaxError: unterminated string literal: "abc(*123*)
+58    1     comments            (* a terminated string *)
+59    1     string              "abc(*abcabcc*)"
+61    1     comments            (* difficult cases: valid *)
+62    1     comments            (*************)
+64    1     comments            (* difficult cases: valid *)
+65    1     comments            (*******(*****(*)
+67    1     comments            (* difficult cases: valid *)
+68    1     comments            (*123***123213**21****)
+70    1     comments            (* difficult cases: valid *)
+71    1     comments            (*""*)
+73    1     comments            (* difficult cases: an unterminated comment *)
+74    1     error               SyntaxError: unterminated comments: (****123**
+Total:51 tokens,10errors

@@ -185,9 +185,9 @@ int main(int argc, char **argv)
     std::cout << output_path << std::endl;
     yyout = new std::ofstream{output_path};
   }
-  auto &in = *yyin;
-  auto &out = *yyout;
-  auto lexer = std::make_unique<yyFlexLexer>(in, out);
+  // auto &in = *yyin;
+  // auto &out = *yyout;
+  auto lexer = std::make_unique<yyFlexLexer>(yyin,yyout);
   PrintHeadings(*yyout);
   while (true)
   {
