@@ -43,17 +43,18 @@ std::pair<int, int> UpdatePosition(const yyFlexLexer &lexer)
   std::string token = lexer.YYText();
   auto size = lexer.YYLeng();
 
-  if (lexer.lineno() == start_row)
+  if (lexer.lineno() == start_row)//如果说还在一行内
   {
     cur_column += size;
   }
-  else
+  else//token进行换行
   {
-    cur_row = lexer.lineno();
+    cur_row = lexer.lineno();//当前行直接利用lexer的函数
     auto end = token.find_last_of('\n');
+    //如果匹配对象中不含换行符，那么cur_column直接等于token的长度，如果含换行符，只有最后一行长度
     cur_column = end == std::string::npos ? size : size - end;
   }
-  return std::make_pair(start_row, start_column);
+  return std::make_pair(start_row, start_column);//返回token的开始位置
 }
 
 std::pair<std::string, std::string> GetNormalResult(const std::string &token, const int t)
@@ -62,7 +63,7 @@ std::pair<std::string, std::string> GetNormalResult(const std::string &token, co
   {
   case T_INTEGER:
     if (token.size() > 10 || std::stoull(token) > INT32_MAX)
-    {
+    {//如果token的size>10,必然超出int的范围，另外情况用INT32_MAX判断
       return std::make_pair("error", "RangeError: out of range");
     }
     else
@@ -74,11 +75,11 @@ std::pair<std::string, std::string> GetNormalResult(const std::string &token, co
   case T_STRING:
   {
     if (token.size() > 257)
-    {
+    {//如果string长度>255报错，由于string前后有引号，这里需要为257
       return std::make_pair("error", "ValueError: string literal is too long");
     }
     else if (token.find('\t') != std::string::npos)
-    {
+    {//如果string中间含有换行符
       return std::make_pair("error", "ValueError: invalid character found in string");
     }
     return std::make_pair("string", "");
@@ -114,49 +115,49 @@ std::pair<std::string, std::string> GetNormalResult(const std::string &token, co
 int ReadToken(yyFlexLexer &lexer, std::ostream &output)
 {
   static std::string comment;
-  static int comment_row_start = 1;
+  static int comment_row_start = 1;//维护comment的起始行
   static int comment_col_start = 1;
 
-  auto t = lexer.yylex();
-  std::pair<int, int> start_position = UpdatePosition(lexer);
-  std::string token = lexer.YYText();
-  std::pair<std::string, std::string> message;
+  auto t = lexer.yylex();//得到lexer的匹配类型
+  std::pair<int, int> start_position = UpdatePosition(lexer);//得到token的起始位置
+  std::string token = lexer.YYText();//得到token的内容
+  std::pair<std::string, std::string> message;//通过调用GetNormalResult得到token信息，空白字符时为空
   switch (t)
   {
   case T_EOF:
   case T_WS:
-  case T_NEWLINE:
+  case T_NEWLINE://这部分处理了空白字符
     break;
 
-  case T_COMMENTS_BEGIN:
+  case T_COMMENTS_BEGIN://开始进入comment状态
   {
-    comment_row_start = start_position.first;
+    comment_row_start = start_position.first;//此时设置comment的起始位置
     comment_col_start = start_position.second;
   }
   case T_COMMENTS:
-  {
+  {//在comment状态下，每匹配一个字符都会返回comment，这时要讲comment在这里进行拼凑，同时维护comment的开始
     start_position.first = comment_row_start;
     start_position.second = comment_col_start;
     comment += token;
-    break;
+    break;//在这里直接break，message不会在下面进行赋值，防止comment没结束就输出
   }
   case E_UNTERM_COMMENTS:
   case T_COMMENTS_END:
-  {
+  {//如果comment结束了，要将start_position变成维护的comment的起始位置用来为下面输出
     start_position.first = comment_row_start;
     start_position.second = comment_col_start;
-    token = comment + token;
-    comment.clear();
+    token = comment + token;//将保存的comment加到token中，用来下面输出
+    comment.clear();//将保存的comment清零
   }
   default:
     message = GetNormalResult(token, t);
   }
-  if (!message.first.empty())
+  if (!message.first.empty())//如果不是空白字符
   {
     output << std::setw(6) << start_position.first;
     output << std::setw(6) << start_position.second;
     output << std::setw(20) << message.first;
-    if (!message.second.empty())
+    if (!message.second.empty())//如果有错误信息
     {
       output << message.second << ": ";
       ++error_count;
@@ -174,9 +175,9 @@ int ReadToken(yyFlexLexer &lexer, std::ostream &output)
 int main(int argc, char **argv)
 {
   std::string output_dir("output/");
-  std::istream *yyin = &std::cin;
+  std::istream *yyin = &std::cin;//默认使用cin，cout
   std::ostream *yyout = &std::cout;
-  if (argc > 1)
+  if (argc > 1)//如果输入是文件处理
   {
     auto input = fs::path{argv[1]};
     yyin = new std::ifstream{input.c_str()};
@@ -187,12 +188,12 @@ int main(int argc, char **argv)
   }
   // auto &in = *yyin;
   // auto &out = *yyout;
-  auto lexer = std::make_unique<yyFlexLexer>(yyin,yyout);
+  auto lexer = std::make_unique<yyFlexLexer>(yyin,yyout);//创建lexer对象
   PrintHeadings(*yyout);
   while (true)
   {
     auto t = ReadToken(*lexer, *yyout);
-    if (t == T_EOF || t == E_UNTERM_COMMENTS)
+    if (t == T_EOF || t == E_UNTERM_COMMENTS)//如果读到终结字符，结束
     {
       PrintEndline(*yyout);
       break;
